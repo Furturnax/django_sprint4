@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 
-from blog.const import MAX_LENGTH, SLICE
+from .const import MAX_LENGTH, SLICE
 
 User = get_user_model()
 

@@ -3,12 +3,12 @@ from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
 
-from blog.forms import PostForm
-from blog.models import Category, Post
-from blog.const import INDEX_LIMIT
+from .forms import PostForm, ProfileForm
+from .models import Category, Post
+from .const import INDEX_LIMIT
 
 
 def filter_posts(query_set):
@@ -46,7 +46,6 @@ def profile(request, username):
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
-
     model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
@@ -57,3 +56,10 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('blog:profile', args=(self.request.user.get_username()))
+
+
+class EditProfileUpdateView(LoginRequiredMixin, UpdateView):
+    model = User
+    form_class = ProfileForm
+    template_name = 'blog/user.html'
+    success_url = reverse_lazy('blog:index')
