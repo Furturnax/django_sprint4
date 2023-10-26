@@ -100,4 +100,4 @@ LOGIN_REDIRECT_URL = 'blog:index'
 
 LOGIN_URL = 'login'
 
-CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+CSRF_FAILURE_VIEW = 'pages.views.permission_denied'
