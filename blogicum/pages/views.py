@@ -1,14 +1,13 @@
+from django.views.generic import TemplateView
 from django.shortcuts import render
 
 
-def about(request):
-    template = 'pages/about.html'
-    return render(request, template)
+class AboutPage(TemplateView):
+    template_name = 'pages/about.html'
 
 
-def rules(request):
-    template = 'pages/rules.html'
-    return render(request, template)
+class RulesPage(TemplateView):
+    template_name = 'pages/rules.html'
 
 
 def permission_denied(request, reason=''):

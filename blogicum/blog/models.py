@@ -1,9 +1,7 @@
+from django.contrib.auth.models import User
 from django.db import models
-from django.contrib.auth import get_user_model
 
 from .const import MAX_LENGTH, SLICE
-
-User = get_user_model()
 
 
 class PublishedCreatedModel(models.Model):
@@ -112,3 +110,27 @@ class Post(TitleModel, PublishedCreatedModel):
 
     def __str__(self):
         return self.title[:SLICE]
+
+
+class Comment(models.Model):
+    text = models.TextField('Текст комментария')
+    post = models.ForeignKey(
+        Post,
+        verbose_name='Комментарий',
+        on_delete=models.CASCADE,
+    )
+    author = models.ForeignKey(
+        User,
+        verbose_name='Автор публикации',
+        on_delete=models.CASCADE,
+    )
+    created_at = models.DateTimeField(
+        'Добавлено',
+        auto_now_add=True,
+    )
+
+    class Meta(PublishedCreatedModel.Meta):
+        ordering = ('created_at',)
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
+        default_related_name = 'comments'
