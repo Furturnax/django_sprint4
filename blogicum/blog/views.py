@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import (CreateView, DeleteView, DetailView, ListView,
                                   UpdateView)
@@ -8,7 +9,6 @@ from django.utils.timezone import now
 
 from .forms import PostForm, ProfileForm
 from .models import Category, Post
-from .const import INDEX_LIMIT
 
 
 def filter_posts(query_set):
@@ -20,8 +20,11 @@ def filter_posts(query_set):
 
 
 def index(request):
-    post_list = filter_posts(Post.objects)[:INDEX_LIMIT]
-    return render(request, 'blog/index.html', {'post_list': post_list})
+    post_list = filter_posts(Post.objects)
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'blog/index.html', {'page_obj': page_obj})
 
 
 def post_detail(request, post_id):
@@ -36,13 +39,21 @@ def category_posts(request, category_slug):
         is_published=True
     )
     post_list = filter_posts(category.posts.all())
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     return render(request, 'blog/category.html', {'category': category,
-                                                  'post_list': post_list})
+                                                  'page_obj': page_obj})
 
 
 def profile(request, username):
     user_name = get_object_or_404(User, username=username)
-    return render(request, 'blog/profile.html', {'profile': user_name})
+    post_list = Post.objects.filter(author=user_name.id)
+    paginator = Paginator(post_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'blog/profile.html', {'profile': user_name,
+                                                 'page_obj': page_obj})
 
 
 class PostCreateView(LoginRequiredMixin, CreateView):
