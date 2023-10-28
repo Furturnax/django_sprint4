@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
 
-from .models import Category, Location, Post
+from .models import Category, Comment, Location, Post
 
 admin.site.empty_value_display = 'Не задано'
 
@@ -41,3 +41,14 @@ class PostAdmin(admin.ModelAdmin):
     search_fields = ('title', 'text')
     ordering = ('-created_at',)
     list_display_links = ('title',)
+
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    """Настройка раздела Комментарии."""
+
+    list_display = ('text', 'author', 'created_at')
+    list_filter = ('text', 'author')
+    search_fields = ('text', 'author')
+    ordering = ('-created_at',)
+    list_display_links = ('text',)

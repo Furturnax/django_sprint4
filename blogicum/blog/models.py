@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from .const import MAX_LENGTH, SLICE
+from .const import MAX_LENGTH
 
 
 class PublishedCreatedModel(models.Model):
@@ -50,7 +50,7 @@ class Category(TitleModel, PublishedCreatedModel):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.title[:SLICE]
+        return self.title
 
 
 class Location(PublishedCreatedModel):
@@ -66,7 +66,7 @@ class Location(PublishedCreatedModel):
         verbose_name_plural = 'Местоположения'
 
     def __str__(self):
-        return self.name[:SLICE]
+        return self.name
 
 
 class Post(TitleModel, PublishedCreatedModel):
@@ -109,10 +109,12 @@ class Post(TitleModel, PublishedCreatedModel):
         default_related_name = 'posts'
 
     def __str__(self):
-        return self.title[:SLICE]
+        return self.title
 
 
 class Comment(models.Model):
+    """Модель таблицы Комментарий."""
+
     text = models.TextField('Текст комментария')
     post = models.ForeignKey(
         Post,
@@ -130,7 +132,10 @@ class Comment(models.Model):
     )
 
     class Meta(PublishedCreatedModel.Meta):
-        ordering = ('created_at',)
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
+        ordering = ('created_at',)
         default_related_name = 'comments'
+
+    def __str__(self):
+        return self.text

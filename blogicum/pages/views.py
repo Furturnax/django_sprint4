@@ -3,10 +3,14 @@ from django.shortcuts import render
 
 
 class AboutPage(TemplateView):
+    """CBV - создает страницу о проекте."""
+
     template_name = 'pages/about.html'
 
 
 class RulesPage(TemplateView):
+    """CBV - создает страницу правила."""
+
     template_name = 'pages/rules.html'
 
 

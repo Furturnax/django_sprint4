@@ -5,6 +5,7 @@ from .models import Post, Comment
 
 
 class PostForm(forms.ModelForm):
+    """Описание формы на основе модели Post."""
 
     class Meta:
         model = Post
@@ -18,6 +19,7 @@ class PostForm(forms.ModelForm):
 
 
 class ProfileForm(forms.ModelForm):
+    """Описание формы на основе модели Profile."""
 
     class Meta:
         model = User
@@ -25,11 +27,12 @@ class ProfileForm(forms.ModelForm):
             'username',
             'first_name',
             'last_name',
-            'email'
+            'email',
         )
 
 
 class CommentForm(forms.ModelForm):
+    """Описание формы на основе модели Comment."""
 
     class Meta:
         model = Comment
