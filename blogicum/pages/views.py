@@ -15,7 +15,7 @@ class RulesPage(TemplateView):
 
 
 def permission_denied(request, reason=''):
-    return render(request, 'pages/403csrf.html', status=403)
+    return render(request, 'pages/403csrf.html', status=404)
 
 
 def page_not_found(request, exception):

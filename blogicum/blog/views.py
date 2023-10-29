@@ -1,13 +1,12 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.core.paginator import Paginator
-from django.db.models import Count
-from django.shortcuts import get_object_or_404, redirect, render
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import get_object_or_404, redirect
 from django.views.generic import (CreateView, DeleteView, ListView, UpdateView)
 from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
-from django.utils.timezone import now
+
 from core.consts import PAGINATOR_VALUE
 from core.mixins import CommentMixin
 from core.utils import filter_posts, comments_count
@@ -23,12 +22,6 @@ class RegistrationCreateView(CreateView):
     success_url = reverse_lazy('blog:index')
 
 
-def get_paginator(request, list, value: int):
-    """Создаст пагинатор с количеством элементов на странице value."""
-    page_number = request.GET.get('page')
-    return Paginator(list, value).get_page(page_number)
-
-
 class PostListView(ListView):
 
     model = Post
@@ -36,53 +29,81 @@ class PostListView(ListView):
     paginate_by = PAGINATOR_VALUE
 
     def get_queryset(self):
-        queryset = super().get_queryset()
-        queryset = filter_posts(queryset)
-        queryset = comments_count(queryset)
+        return comments_count(filter_posts(super().get_queryset()))
+
+
+class PostDetailListView(ListView):
+
+    model = Comment
+    template_name = 'blog/detail.html'
+    paginate_by = PAGINATOR_VALUE
+
+    def get_post(self, post_id):
+        post = get_object_or_404(Post, id=post_id)
+        if post.author != self.request.user and not post.is_published:
+            raise PermissionDenied()
+        return post
+
+    def get_queryset(self):
+        post_id = self.kwargs['post_id']
+        post = self.get_post(post_id)
+        return Comment.objects.filter(post=post)
+
+    def get_context_data(self, **kwargs):
+        post_id = self.kwargs['post_id']
+        context = {
+            'post': self.get_post(post_id),
+            'form': CommentForm()
+        }
+        context.update(super().get_context_data(**kwargs))
+        return context
+
+
+class CategoryPostsListView(ListView):
+
+    model = Post
+    template_name = 'blog/category.html'
+    paginate_by = PAGINATOR_VALUE
+
+    def get_category(self):
+        return get_object_or_404(
+            Category,
+            slug=self.kwargs['category_slug'],
+            is_published=True
+        )
+
+    def get_queryset(self):
+        return comments_count(filter_posts(self.get_category().posts.all()))
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['category'] = self.get_category()
+        return context
+
+
+class GetProfileListView(ListView):
+
+    model = Post
+    template_name = 'blog/profile.html'
+    context_object_name = 'post_list'
+    paginate_by = PAGINATOR_VALUE
+
+    def get_author(self):
+        return get_object_or_404(
+            User,
+            username=self.kwargs['username_slug'])
+
+    def get_queryset(self):
+        user = self.get_author()
+        queryset = comments_count(Post.objects.filter(author=user))
+        if user != self.request.user:
+            queryset = filter_posts(queryset)
         return queryset
 
-
-
-
-
-def post_detail(request, post_id: int):
-    """Рендерит страницу detail.html."""
-    post = get_object_or_404(Post, id=post_id)
-    if post.author != request.user:
-        post = get_object_or_404(filter_posts(Post.objects), id=post_id)
-    return render(request, 'blog/detail.html', {
-        'post': post,
-        'form': CommentForm(),
-        'comments': Comment.objects.filter(post_id=post_id)
-    })
-
-
-def category_posts(request, category_slug: str):
-    """Рендерит страницу category.html."""
-    category = get_object_or_404(
-        Category.objects,
-        slug=category_slug,
-        is_published=True
-    )
-    post_list = filter_posts(
-        category.posts.all()
-    ).annotate(comment_count=Count('comments'))
-    return render(request, 'blog/category.html', {
-        'category': category,
-        'page_obj': get_paginator(request, post_list, PAGINATOR_VALUE),
-    })
-
-
-def get_profile(request, username_slug: str):
-    """Рендерит страницу profile.html."""
-    user_name = get_object_or_404(User, username=username_slug)
-    post_list = Post.objects.filter(
-        author=user_name.id
-    ).order_by('-pub_date').annotate(comment_count=Count('comments'))
-    return render(request, 'blog/profile.html', {
-        'profile': user_name,
-        'page_obj': get_paginator(request, post_list, PAGINATOR_VALUE),
-    })
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['profile'] = self.get_author()
+        return context
 
 
 class EditProfileUpdateView(LoginRequiredMixin, UpdateView):
