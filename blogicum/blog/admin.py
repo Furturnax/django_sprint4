@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import Group
+from django.utils.safestring import mark_safe
 
 from .models import Category, Comment, Location, Post
 
@@ -35,12 +36,23 @@ class LocationAdmin(admin.ModelAdmin):
 class PostAdmin(admin.ModelAdmin):
     """Настройка раздела Публикации."""
 
-    list_display = ('title', 'text', 'pub_date', 'author', 'location',
-                    'category', 'is_published', 'created_at')
+    list_display = ('is_published', 'title', 'text', 'image_tag', 'author',
+                    'location', 'category', 'pub_date', 'created_at')
     list_filter = ('is_published', 'author', 'location', 'category')
     search_fields = ('title', 'text')
     ordering = ('-created_at',)
     list_display_links = ('title',)
+    readonly_fields = ('image_tag',)
+
+    def image_tag(self, obj):
+        """Добавляет изображение в разделе Публикации и в самом посте."""
+        if obj.image:
+            return mark_safe(
+                f'<img src={obj.image.url} width="80" height="60">'
+            )
+        return 'Нет изображения'
+
+    image_tag.short_description = 'Изображение'
 
 
 @admin.register(Comment)
