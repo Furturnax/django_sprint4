@@ -9,7 +9,8 @@ from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
 
-from .const import PAGINATOR_VALUE
+from core.consts import PAGINATOR_VALUE
+from core.mixins import CommentMixin
 from .forms import CommentForm, PostForm, ProfileForm
 from .models import Category, Comment, Post
 
@@ -97,6 +98,9 @@ class EditProfileUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('blog:index')
     pk_url_kwarg = 'post_id'
 
+    def get_object(self, queryset=None):
+        return self.request.user
+
 
 class PostCreateView(LoginRequiredMixin, CreateView):
     """CBV - создает публикацию."""
@@ -158,15 +162,11 @@ class PostDeleteView(LoginRequiredMixin, DeleteView):
         return context
 
 
-class CommentCreateView(LoginRequiredMixin, CreateView):
+class CommentCreateView(CommentMixin, CreateView):
     """CBV - создаёт комментарий."""
 
-    model = Comment
-    form_class = CommentForm
-    template_name = 'blog/comment.html'
-
     def dispatch(self, request, *args, **kwargs):
-        self.instance = get_object_or_404(Post, id=kwargs['post_id'])
+        self.instance = get_object_or_404(Post, pk=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -179,38 +179,21 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
                        kwargs={'post_id': self.instance.id})
 
 
-class CommentUpdateView(LoginRequiredMixin, UpdateView):
+class CommentUpdateView(CommentMixin, UpdateView):
     """CBV - редактирует комментарий."""
 
-    model = Comment
-    form_class = CommentForm
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
     def dispatch(self, request, *args, **kwargs):
         self.instance = get_object_or_404(Comment, id=kwargs['comment_id'])
         if self.instance.author != request.user:
             return redirect('blog:post_detail', post_id=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
 
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'post_id': self.instance.post_id})
 
-
-class CommenDeleteView(LoginRequiredMixin, DeleteView):
+class CommenDeleteView(CommentMixin, DeleteView):
     """CBV - удаляет комментарий."""
 
-    model = Comment
-    template_name = 'blog/comment.html'
-    pk_url_kwarg = 'comment_id'
-
     def dispatch(self, request, *args, **kwargs):
         self.instance = get_object_or_404(Comment, id=kwargs['comment_id'])
         if self.instance.author != request.user:
             return redirect('blog:post_detail', post_id=kwargs['post_id'])
         return super().dispatch(request, *args, **kwargs)
-
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'post_id': self.instance.post_id})
