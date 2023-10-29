@@ -1,29 +1,11 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from .const import MAX_LENGTH
-
-
-class PublishedCreatedModel(models.Model):
-    """Модель абстрактного класса публикация."""
-
-    is_published = models.BooleanField(
-        'Опубликовано',
-        default=True,
-        help_text='Снимите галочку, чтобы скрыть публикацию.'
-    )
-    created_at = models.DateTimeField(
-        'Добавлено',
-        auto_now_add=True
-    )
-
-    class Meta:
-        abstract = True
-        ordering = ('-created_at',)
+from .const import MAX_LENGTH, SLICE
 
 
 class TitleModel(models.Model):
-    """Модель абстрактного класса заголовок."""
+    """Модель абстрактного класса Заголовок."""
 
     title = models.CharField(
         'Заголовок',
@@ -32,6 +14,36 @@ class TitleModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class CreatedModel(models.Model):
+    """Модель абстрактного класса Добавлено."""
+
+    created_at = models.DateTimeField(
+        'Добавлено',
+        auto_now_add=True
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ('created_at',)
+
+
+class PublishedCreatedModel(CreatedModel):
+    """
+    Модель абстрактного класса Опубликовано с унаследованием
+    от абстрактного класса Добавлено.
+    """
+
+    is_published = models.BooleanField(
+        'Опубликовано',
+        default=True,
+        help_text='Снимите галочку, чтобы скрыть публикацию.'
+    )
+
+    class Meta:
+        abstract = True
+        ordering = ('-created_at',)
 
 
 class Category(TitleModel, PublishedCreatedModel):
@@ -50,7 +62,7 @@ class Category(TitleModel, PublishedCreatedModel):
         verbose_name_plural = 'Категории'
 
     def __str__(self):
-        return self.title
+        return self.title[:SLICE]
 
 
 class Location(PublishedCreatedModel):
@@ -66,7 +78,7 @@ class Location(PublishedCreatedModel):
         verbose_name_plural = 'Местоположения'
 
     def __str__(self):
-        return self.name
+        return self.name[:SLICE]
 
 
 class Post(TitleModel, PublishedCreatedModel):
@@ -109,10 +121,10 @@ class Post(TitleModel, PublishedCreatedModel):
         default_related_name = 'posts'
 
     def __str__(self):
-        return self.title
+        return self.title[:SLICE]
 
 
-class Comment(models.Model):
+class Comment(CreatedModel):
     """Модель таблицы Комментарий."""
 
     text = models.TextField('Текст комментария')
@@ -126,16 +138,11 @@ class Comment(models.Model):
         verbose_name='Автор публикации',
         on_delete=models.CASCADE,
     )
-    created_at = models.DateTimeField(
-        'Добавлено',
-        auto_now_add=True,
-    )
 
-    class Meta(PublishedCreatedModel.Meta):
+    class Meta(CreatedModel.Meta):
         verbose_name = 'комментарий'
         verbose_name_plural = 'Комментарии'
-        ordering = ('created_at',)
         default_related_name = 'comments'
 
     def __str__(self):
-        return self.text
+        return self.text[:SLICE]
