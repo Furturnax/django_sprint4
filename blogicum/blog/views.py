@@ -4,13 +4,13 @@ from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic import (CreateView, DeleteView, UpdateView)
+from django.views.generic import (CreateView, DeleteView, ListView, UpdateView)
 from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
-
 from core.consts import PAGINATOR_VALUE
 from core.mixins import CommentMixin
+from core.utils import filter_posts, comments_count
 from .forms import CommentForm, PostForm, ProfileForm
 from .models import Category, Comment, Post
 
@@ -23,30 +23,26 @@ class RegistrationCreateView(CreateView):
     success_url = reverse_lazy('blog:index')
 
 
-def filter_posts(query_set):
-    """Вернёт отфильтрованный query_set."""
-    return query_set.filter(
-        is_published=True,
-        pub_date__lte=now(),
-        category__is_published=True,
-    ).order_by('-pub_date').select_related('author', 'location', 'category',)
-
-
 def get_paginator(request, list, value: int):
     """Создаст пагинатор с количеством элементов на странице value."""
     page_number = request.GET.get('page')
     return Paginator(list, value).get_page(page_number)
 
 
-def index(request):
-    """Рендерит страницу index.html."""
-    post_list = filter_posts(
-        Post.objects
-    ).annotate(comment_count=Count('comments'))
-    return render(request, 'blog/index.html', {
-        'post_list': post_list,
-        'page_obj': get_paginator(request, post_list, PAGINATOR_VALUE),
-    })
+class PostListView(ListView):
+
+    model = Post
+    template_name = 'blog/index.html'
+    paginate_by = PAGINATOR_VALUE
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        queryset = filter_posts(queryset)
+        queryset = comments_count(queryset)
+        return queryset
+
+
+
 
 
 def post_detail(request, post_id: int):

@@ -6,7 +6,7 @@ app_name = 'blog'
 
 urlpatterns = [
     path('',
-         views.index,
+         views.PostListView.as_view(),
          name='index'),
     path('auth/registration/',
          views.RegistrationCreateView.as_view(),
