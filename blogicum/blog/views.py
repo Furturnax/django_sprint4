@@ -1,10 +1,12 @@
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.paginator import Paginator
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, render
 from django.views.generic import (CreateView, DeleteView, UpdateView)
+from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
 from django.utils.timezone import now
 
@@ -14,6 +16,14 @@ from .mixins import (
     CommentdispatchMixin, CommentMixin, PostdispatchMixin, PostMixin
 )
 from .models import Category, Comment, Post
+
+
+class RegistrationCreateView(CreateView):
+    """CBV - Регистрирует пользователя."""
+
+    form_class = UserCreationForm
+    template_name = 'registration/registration_form.html'
+    success_url = reverse_lazy('blog:index')
 
 
 def filter_posts(query_set):

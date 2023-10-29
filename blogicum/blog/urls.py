@@ -5,6 +5,9 @@ from . import views
 app_name = 'blog'
 
 urlpatterns = [
+    path('auth/registration/',
+         views.RegistrationCreateView.as_view(),
+         name='registration'),
     path('',
          views.index,
          name='index'),
