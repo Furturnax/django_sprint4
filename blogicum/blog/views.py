@@ -139,7 +139,7 @@ class PostUpdateView(PostMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('blog:post_detail',
-                       kwargs={'post_id': self.kwargs['post_id']})
+                       kwargs={'post_id': self.instance.post_id})
 
 
 class PostDeleteView(PostMixin, DeleteView):
