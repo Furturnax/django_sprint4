@@ -2,33 +2,41 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.urls import reverse
 
-from blog.forms import CommentForm
-from blog.models import Comment
+from blog.forms import CommentForm, PostForm
+from blog.models import Comment, Post
 
 
 class IsAuthorMixin(UserPassesTestMixin):
 
     def test_func(self):
-        return self.instance.author
+        return self.get_object().author == self.request.user
+
 
 
 class PostMixin(IsAuthorMixin, LoginRequiredMixin):
 
-    def handle_no_permission(self):
-        return reverse('blog:profile',
-                       kwargs={'post_id': self.instance.id})
+    # model = Post
+    # template_name = 'blog/create.html'
+    # form_class = PostForm
+    # pk_url_kwarg = 'post_id'
 
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'username_slug': self.request.user.username})
+    # def handle_no_permission(self):
+    #     return reverse('blog:profile',
+    #                    kwargs={'post_id': self.kwargs['post_id']})
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['form'] = {'instance': self.instance}
-        return context
+    # def get_success_url(self):
+    #     return reverse('blog:post_detail',
+    #                    kwargs={'username': self.request.user.username})
+
+    # def get_context_data(self, **kwargs):
+    #     context = super().get_context_data(**kwargs)
+    #     context['form'] = PostForm()
+    #     return context
+    pass
 
 
 class CommentMixin(LoginRequiredMixin):
+    """Миксин раздела комментарии."""
 
     model = Comment
     form_class = CommentForm
@@ -37,4 +45,4 @@ class CommentMixin(LoginRequiredMixin):
 
     def get_success_url(self):
         return reverse('blog:post_detail',
-                       kwargs={'post_id': self.instance.post_id})
+                       kwargs={'post_id': self.kwargs['post_id']})
