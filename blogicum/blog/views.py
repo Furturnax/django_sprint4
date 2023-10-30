@@ -1,7 +1,7 @@
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.core.exceptions import PermissionDenied
+from django.http import Http404
 from django.shortcuts import get_object_or_404
 from django.views.generic import (CreateView, DeleteView, ListView, UpdateView)
 from django.views.generic.edit import CreateView
@@ -23,6 +23,7 @@ class RegistrationCreateView(CreateView):
 
 
 class PostListView(ListView):
+    """CBV - Рендер главной стрницы."""
 
     model = Post
     template_name = 'blog/index.html'
@@ -33,33 +34,32 @@ class PostListView(ListView):
 
 
 class PostDetailListView(ListView):
+    """CBV - Рендер старницы отдельный постов."""
 
     model = Comment
     template_name = 'blog/detail.html'
     paginate_by = PAGINATOR_VALUE
+    pk_url_kwarg = 'post_id'
 
     def get_post(self, post_id):
         post = get_object_or_404(Post, id=post_id)
         if post.author != self.request.user and not post.is_published:
-            raise PermissionDenied()
+            raise Http404('Публикация не найдена')
         return post
 
     def get_queryset(self):
         post_id = self.kwargs['post_id']
-        post = self.get_post(post_id)
-        return Comment.objects.filter(post=post)
+        return self.get_post(post_id).comments.all()
 
     def get_context_data(self, **kwargs):
-        post_id = self.kwargs['post_id']
-        context = {
-            'post': self.get_post(post_id),
-            'form': CommentForm()
-        }
-        context.update(super().get_context_data(**kwargs))
+        context = super().get_context_data(**kwargs)
+        context['post'] = self.get_post(self.kwargs['post_id'])
+        context['form'] = CommentForm()
         return context
 
 
 class CategoryPostsListView(ListView):
+    """CBV - Рендер категорий."""
 
     model = Post
     template_name = 'blog/category.html'
@@ -82,6 +82,7 @@ class CategoryPostsListView(ListView):
 
 
 class GetProfileListView(ListView):
+    """CBV - Рендер страниц пользователя."""
 
     model = Post
     template_name = 'blog/profile.html'
@@ -131,7 +132,7 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('blog:profile',
-                       args=[self.request.user.username])
+                       kwargs={'username_slug': self.request.user.username})
 
 
 class PostUpdateView(PostMixin, UpdateView):
@@ -139,7 +140,7 @@ class PostUpdateView(PostMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('blog:post_detail',
-                       kwargs={'post_id': self.instance.post_id})
+                       kwargs={'post_id': self.kwargs['post_id']})
 
 
 class PostDeleteView(PostMixin, DeleteView):
