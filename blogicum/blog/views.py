@@ -3,7 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.shortcuts import get_object_or_404
-from django.views.generic import (CreateView, DeleteView, ListView, UpdateView)
+from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
 
@@ -48,8 +48,7 @@ class PostDetailListView(ListView):
         return post
 
     def get_queryset(self):
-        post_id = self.kwargs['post_id']
-        return self.get_post(post_id).comments.all()
+        return self.get_post(self.kwargs['post_id']).comments.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -82,11 +81,10 @@ class CategoryPostsListView(ListView):
 
 
 class GetProfileListView(ListView):
-    """CBV - Рендер страниц пользователя."""
+    """CBV - Рендер страницы пользователей."""
 
     model = Post
     template_name = 'blog/profile.html'
-    context_object_name = 'post_list'
     paginate_by = PAGINATOR_VALUE
 
     def get_author(self):
