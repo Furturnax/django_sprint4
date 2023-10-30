@@ -23,7 +23,8 @@ class PostMixin(IsAuthorMixin, LoginRequiredMixin):
     pk_url_kwarg = 'post_id'
 
     def handle_no_permission(self):
-        return redirect('blog:post_detail', post_id=self.kwargs['post_id'])
+        return redirect('blog:post_detail',
+                        post_id=self.kwargs[self.pk_url_kwarg])
 
     def get_success_url(self):
         return reverse('blog:profile',

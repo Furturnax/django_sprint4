@@ -9,7 +9,7 @@ from django.urls import reverse, reverse_lazy
 
 from core.consts import PAGINATOR_VALUE
 from core.mixins import CommentMixin, IsAuthorMixin, PostMixin
-from core.utils import filter_posts, comments_count
+from core.services import filter_publication, annotation_posts_number_comments
 from .forms import CommentForm, PostForm, ProfileForm
 from .models import Category, Comment, Post
 
@@ -30,7 +30,9 @@ class PostListView(ListView):
     paginate_by = PAGINATOR_VALUE
 
     def get_queryset(self):
-        return comments_count(filter_posts(super().get_queryset()))
+        return annotation_posts_number_comments(
+            filter_publication(super().get_queryset())
+        )
 
 
 class PostDetailListView(ListView):
@@ -41,18 +43,18 @@ class PostDetailListView(ListView):
     paginate_by = PAGINATOR_VALUE
     pk_url_kwarg = 'post_id'
 
-    def get_post(self, post_id):
-        post = get_object_or_404(Post, id=post_id)
+    def get_post(self):
+        post = get_object_or_404(Post, id=self.kwargs[self.pk_url_kwarg])
         if post.author != self.request.user and not post.is_published:
             raise Http404('Публикация не найдена')
         return post
 
     def get_queryset(self):
-        return self.get_post(self.kwargs['post_id']).comments.all()
+        return self.get_post().comments.all()
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['post'] = self.get_post(self.kwargs['post_id'])
+        context['post'] = self.get_post()
         context['form'] = CommentForm()
         return context
 
@@ -72,7 +74,9 @@ class CategoryPostsListView(ListView):
         )
 
     def get_queryset(self):
-        return comments_count(filter_posts(self.get_category().posts.all()))
+        return annotation_posts_number_comments(
+            filter_publication(self.get_category().posts.all())
+        )
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -94,9 +98,11 @@ class GetProfileListView(ListView):
 
     def get_queryset(self):
         user = self.get_author()
-        queryset = comments_count(Post.objects.filter(author=user))
+        queryset = annotation_posts_number_comments(
+            user.posts.filter(author=user)
+        )
         if user != self.request.user:
-            queryset = filter_posts(queryset)
+            queryset = filter_publication(queryset)
         return queryset
 
     def get_context_data(self, **kwargs):
