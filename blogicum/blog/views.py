@@ -2,7 +2,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
-from django.shortcuts import get_object_or_404, redirect
+from django.shortcuts import get_object_or_404
 from django.views.generic import (CreateView, DeleteView, ListView, UpdateView)
 from django.views.generic.edit import CreateView
 from django.urls import reverse, reverse_lazy
@@ -122,10 +122,8 @@ class EditProfileUpdateView(LoginRequiredMixin, UpdateView):
 class PostCreateView(LoginRequiredMixin, CreateView):
     """CBV - создает публикацию."""
 
-    model = Post
     form_class = PostForm
     template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
 
     def form_valid(self, form):
         form.instance.author = self.request.user
@@ -133,47 +131,21 @@ class PostCreateView(LoginRequiredMixin, CreateView):
 
     def get_success_url(self):
         return reverse('blog:profile',
-                       kwargs={'username_slug': self.request.user.username})
+                       args=[self.request.user.username])
 
 
 class PostUpdateView(PostMixin, UpdateView):
     """CBV - редактирует публикацию."""
 
-    model = Post
-    template_name = 'blog/create.html'
-    form_class = PostForm
-    pk_url_kwarg = 'post_id'
-
     def get_success_url(self):
         return reverse('blog:post_detail',
                        kwargs={'post_id': self.kwargs['post_id']})
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != request.user:
-            return redirect(
-                reverse('blog:post_detail',
-                        kwargs={'pk': self.kwargs['post_id']}))
-        return super().dispatch(request, *args, **kwargs)
 
 
 class PostDeleteView(PostMixin, DeleteView):
     """CBV - удаляет публикацию."""
 
-    model = Post
-    template_name = 'blog/create.html'
-    pk_url_kwarg = 'post_id'
-    success_url = reverse_lazy('blog:profile')
-
-    def dispatch(self, request, *args, **kwargs):
-        if self.get_object().author != request.user:
-            return redirect(
-                reverse('blog:post_detail',
-                        kwargs={'pk': self.kwargs['post_id']}))
-        return super().dispatch(request, *args, **kwargs)
-    
-    def get_success_url(self):
-        return reverse('blog:post_detail',
-                       kwargs={'username': self.request.user.username})
+    pass
 
 
 class CommentCreateView(CommentMixin, CreateView):

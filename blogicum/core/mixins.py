@@ -7,32 +7,32 @@ from blog.models import Comment, Post
 
 
 class IsAuthorMixin(UserPassesTestMixin):
+    """Миксин проверки авторства."""
 
     def test_func(self):
         return self.get_object().author == self.request.user
 
 
-
 class PostMixin(IsAuthorMixin, LoginRequiredMixin):
+    """Миксин раздела посты."""
 
-    # model = Post
-    # template_name = 'blog/create.html'
-    # form_class = PostForm
-    # pk_url_kwarg = 'post_id'
+    model = Post
+    template_name = 'blog/create.html'
+    form_class = PostForm
+    pk_url_kwarg = 'post_id'
 
-    # def handle_no_permission(self):
-    #     return reverse('blog:profile',
-    #                    kwargs={'post_id': self.kwargs['post_id']})
+    def handle_no_permission(self):
+        return reverse('blog:post_detail',
+                       kwargs={'post_id': self.kwargs['post_id']})
 
-    # def get_success_url(self):
-    #     return reverse('blog:post_detail',
-    #                    kwargs={'username': self.request.user.username})
+    def get_success_url(self):
+        return reverse('blog:profile',
+                       args=[self.request.user.username])
 
-    # def get_context_data(self, **kwargs):
-    #     context = super().get_context_data(**kwargs)
-    #     context['form'] = PostForm()
-    #     return context
-    pass
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = PostForm(instance=self.object)
+        return context
 
 
 class CommentMixin(LoginRequiredMixin):
