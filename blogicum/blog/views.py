@@ -99,7 +99,7 @@ class GetProfileListView(ListView):
     def get_queryset(self):
         user = self.get_author()
         queryset = annotation_posts_number_comments(
-            user.posts.filter(author=user)
+            user.posts.filter()
         )
         if user != self.request.user:
             queryset = filter_publication(queryset)
