@@ -2,7 +2,7 @@ from django.contrib.auth.models import User
 from django.db import models
 
 from core.consts import MAX_LENGTH, SLICE
-from core.models import TitleModel, CreatedModel, PublishedCreatedModel
+from core.models import CreatedModel, PublishedCreatedModel, TitleModel
 
 
 class Category(TitleModel, PublishedCreatedModel):
@@ -13,7 +13,7 @@ class Category(TitleModel, PublishedCreatedModel):
         'Идентификатор',
         unique=True,
         help_text='Идентификатор страницы для URL; разрешены символы '
-        'латиницы, цифры, дефис и подчёркивание.'
+        'латиницы, цифры, дефис и подчёркивание.',
     )
 
     class Meta(PublishedCreatedModel.Meta):
@@ -29,7 +29,7 @@ class Location(PublishedCreatedModel):
 
     name = models.CharField(
         'Название места',
-        max_length=MAX_LENGTH
+        max_length=MAX_LENGTH,
     )
 
     class Meta(PublishedCreatedModel.Meta):
@@ -47,7 +47,7 @@ class Post(TitleModel, PublishedCreatedModel):
     pub_date = models.DateTimeField(
         'Дата и время публикации',
         help_text='Если установить дату и время в будущем — можно '
-        'делать отложенные публикации.'
+        'делать отложенные публикации.',
     )
     author = models.ForeignKey(
         User,
@@ -70,7 +70,7 @@ class Post(TitleModel, PublishedCreatedModel):
     image = models.ImageField(
         'Фото',
         upload_to='posts_images',
-        blank=True
+        blank=True,
     )
 
     class Meta:

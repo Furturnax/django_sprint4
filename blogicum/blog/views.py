@@ -3,13 +3,13 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.http import Http404
 from django.shortcuts import get_object_or_404
+from django.urls import reverse, reverse_lazy
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 from django.views.generic.edit import CreateView
-from django.urls import reverse, reverse_lazy
 
 from core.consts import PAGINATOR_VALUE
 from core.mixins import CommentMixin, IsAuthorMixin, PostMixin
-from core.services import filter_publication, annotation_posts_number_comments
+from core.services import annotation_posts_number_comments, filter_publication
 from .forms import CommentForm, PostForm, ProfileForm
 from .models import Category, Comment, Post
 
